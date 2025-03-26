@@ -4,7 +4,9 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../Model/userModel";
+import staffModel from "../Model/staffModel";
 
+//Auth
 export const registerUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, phoneNumber, password, address, firstName, lastName, state, lga } = req.body;
@@ -47,21 +49,21 @@ export const verifyUser = async (req: Request, res: Response): Promise<Response>
         const user = await userModel.findById(userID)
 
         if (!token) {
-            return res.status(400).json({
+            return res.status(Http.Bad).json({
                 message: "Verification token is required.",
-                status: 400,
+                status: Http.Bad,
             });
         }
         if (!user) {
-            return res.status(404).json({
+            return res.status(Http.Bad).json({
                 message: "This user does not exist.",
                 status: Http.Bad,
             });
         }
         if (user?.token !== token) {
-            return res.status(400).json({
+            return res.status(Http.Bad).json({
                 message: "Incorrect token provided.",
-                status: 400,
+                status: Http.Bad,
             });
         }
 
@@ -168,6 +170,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
     }
 }
 
+//getuser
 export const getOneUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { userID } = req.params;
@@ -212,3 +215,203 @@ export const getAllUser = async (req: Request, res: Response): Promise<Response>
         })
     }
 }
+
+//feedBack comment
+export const createFeedback = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { userID, workerID } = req.params;
+        const { rating, comment } = req.body;
+
+        if (!rating || !comment) {
+            return res.status(Http.Bad).json({
+                message: "Rating and comment are required.",
+                status: Http.Bad,
+            });
+        }
+
+        if (rating < 1 || rating > 5) {
+            return res.status(Http.Bad).json({
+                message: "Rating must be between 1 and 5.",
+                status: Http.Bad,
+            });
+        }
+
+        const user = await userModel.findById(userID);
+        if (!user) {
+            return res.status(Http.Bad).json({
+                message: "User not found.",
+                status: Http.Bad,
+            });
+        }
+
+        const worker = await staffModel.findById(workerID);
+        if (!worker) {
+            return res.status(Http.Bad).json({
+                message: "Worker not found.",
+                status: Http.Bad,
+            });
+        }
+
+        const updatedWorker = await staffModel.findByIdAndUpdate(
+            workerID,
+            {
+                $push: {
+                    feedback: {
+                        user: userID,
+                        rating,
+                        comment,
+                    },
+                },
+            },
+            { new: true }
+        );
+
+        return res.status(Http.Created).json({
+            message: "Feedback submitted successfully.",
+            data: updatedWorker,
+            status: Http.Created,
+        });
+
+    } catch (error: any) {
+        return res.status(Http.Server_Error).json({
+            message: "Error submitting feedback",
+            error: error.message,
+            status: Http.Server_Error,
+        });
+    }
+};
+
+export const getAverageRating = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { workerID } = req.params;
+
+        const worker = await staffModel.findById(workerID);
+        if (!worker) {
+            return res.status(Http.Bad).json({
+                message: "Worker not found.",
+                status: Http.Bad,
+            });
+        }
+
+        const feedbacks = worker.feedback;
+        if (feedbacks.length === 0) {
+            return res.status(Http.Ok).json({
+                message: "No feedback available.",
+                averageRating: 0,
+                status: Http.Ok,
+            });
+        }
+
+        const totalRating = feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0);
+        const averageRating = totalRating / feedbacks.length;
+
+        return res.status(Http.Ok).json({
+            message: "Average rating calculated successfully.",
+            averageRating: averageRating.toFixed(2),
+            totalFeedbacks: feedbacks.length,
+            status: Http.Ok,
+        });
+
+    } catch (error: any) {
+        console.log(error);
+        return res.status(Http.Server_Error).json({
+            message: "Error calculating average rating.",
+            error: error.message,
+            status: Http.Server_Error,
+        });
+    }
+};
+
+
+export const editFeedback = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { userID, workerID } = req.params;
+        const { rating, comment } = req.body;
+
+        if (!rating || !comment) {
+            return res.status(400).json({
+                message: "Rating and comment are required.",
+                status: 400,
+            });
+        }
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({
+                message: "Rating must be between 1 and 5.",
+                status: 400,
+            });
+        }
+
+        const worker = await staffModel.findById(workerID);
+        if (!worker) {
+            return res.status(Http.Bad).json({
+                message: "Worker not found.",
+                status: Http.Bad,
+            });
+        }
+
+        const feedbackIndex = worker.feedback.findIndex(fb => fb.user.toString() === userID);
+        if (feedbackIndex === -1) {
+            return res.status(Http.Bad).json({
+                message: "Feedback not found.",
+                status: Http.Bad,
+            });
+        }
+
+        worker.feedback[feedbackIndex].rating = rating;
+        worker.feedback[feedbackIndex].comment = comment;
+        await worker.save();
+
+        return res.status(Http.Ok).json({
+            message: "Feedback updated successfully.",
+            data: worker,
+            status: Http.Ok,
+        });
+
+    } catch (error: any) {
+        console.log(error);
+        return res.status(Http.Server_Error).json({
+            message: "Error updating feedback.",
+            error: error.message,
+            status: Http.Server_Error,
+        });
+    }
+};
+
+export const deleteFeedback = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { userID, workerID } = req.params;
+
+        const worker = await staffModel.findById(workerID);
+        if (!worker) {
+            return res.status(Http.Bad).json({
+                message: "Worker not found.",
+                status: Http.Bad,
+            });
+        }
+
+        const feedbackIndex = worker.feedback.findIndex(fb => fb.user.toString() === userID);
+        if (feedbackIndex === -1) {
+            return res.status(Http.Bad).json({
+                message: "Feedback not found.",
+                status: Http.Bad,
+            });
+        }
+
+        worker.feedback.splice(feedbackIndex, 1);
+        await worker.save();
+
+        return res.status(Http.Ok).json({
+            message: "Feedback deleted successfully.",
+            data: worker,
+            status: Http.Ok,
+        });
+
+    } catch (error: any) {
+        console.log(error);
+        return res.status(Http.Server_Error).json({
+            message: "Error deleting feedback.",
+            error: error.message,
+            status: Http.Server_Error,
+        });
+    }
+};

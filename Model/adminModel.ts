@@ -2,6 +2,7 @@ import { Document, Schema, Types, model } from "mongoose";
 
 interface iAdmin {
 
+    email: string;
     token: string;
     verify: boolean;
     allUsers: Array<{}>;
@@ -18,6 +19,10 @@ const adminModel = new Schema<iAdminData>(
             default: false
         },
         token: {
+            type: String,
+            unique: true
+        },
+        email: {
             type: String,
             unique: true
         },
