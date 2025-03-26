@@ -65,7 +65,7 @@ export const loginAdmin = async (req: Request, res: Response): Promise<Response>
             // req.session.adminID = admin._id;
 
             return res.status(Http.Ok).json({
-                message: "staff Successfully Logged In",
+                message: "Admin Successfully Logged In",
                 data: jwtToken,
 
             });

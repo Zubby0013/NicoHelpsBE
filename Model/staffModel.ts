@@ -18,8 +18,8 @@ interface iStaff {
     lga: string;
     verify: boolean;
     started: boolean;
-    nin: number;
-    bvn: number;
+    nin: string;
+    bvn: string;
     company: {};
 
     rate: number;
@@ -36,8 +36,8 @@ const staffModel = new Schema<iStaffData>(
         lastName: { type: String },
         password: { type: String },
         email: { type: String, unique: true },
-        nin: { type: Number, unique: true },
-        bvn: { type: Number, unique: true },
+        nin: { type: String, unique: true },
+        bvn: { type: String, unique: true },
         address: { type: String },
         phoneNumber: { type: String },
         state: { type: String },

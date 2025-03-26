@@ -5,15 +5,22 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import staffPostModel from "../Model/staffPostModel";
+import adminModel from "../Model/adminModel";
+import { Types } from "mongoose";
+import cloudinary from "../Utils/Cloudinary";
+
 
 //Auth
 export const registerStaff = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, phoneNumber, password } = req.body;
+        const { adminID } = req.params
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const id = crypto.randomBytes(3).toString("hex");
+
+        const admin = await adminModel.findOne();
 
         const staff = await staffModel.create({
             email,
@@ -22,6 +29,9 @@ export const registerStaff = async (req: Request, res: Response): Promise<Respon
             token: id,
 
         })
+
+        admin?.allStaffs.push(staff._id!);
+        await admin?.save();
 
         return res.status(Http.Ok).json({
             message: "register staff successful",
@@ -273,11 +283,19 @@ export const createPost = async (req: Request, res: Response): Promise<Response>
         const { staffID } = req.params;
         const { image, description, title, } = req.body;
 
+        if (!req.file) {
+            return res.status(Http.Bad).json({
+                message: "No file selected",
+            });
+        }
+
+        const { secure_url } = await cloudinary.uploader.upload(req.file.path);
+
         const details = await staffModel.findById(staffID);
 
         if (staffID) {
             const staff = await staffPostModel.create({
-                image: image,
+                image: secure_url,
                 description: description,
                 title: title,
                 staffFirstName: details?.firstName,

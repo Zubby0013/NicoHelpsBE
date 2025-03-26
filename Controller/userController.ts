@@ -5,15 +5,21 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../Model/userModel";
 import staffModel from "../Model/staffModel";
+import { Types } from "mongoose";
+import adminModel from "../Model/adminModel";
 
 //Auth
 export const registerUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, phoneNumber, password, address, firstName, lastName, state, lga } = req.body;
+        const { adminID } = req.params
+
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const id = crypto.randomBytes(3).toString("hex");
+        const admin = await adminModel.findOne();
+
 
         const user = await userModel.create({
             email,
@@ -26,6 +32,10 @@ export const registerUser = async (req: Request, res: Response): Promise<Respons
             state,
             lga
         })
+        admin?.allUsers.push(user._id!);
+
+        await admin?.save();
+
 
         return res.status(Http.Ok).json({
             message: "register user successful",
@@ -46,7 +56,7 @@ export const verifyUser = async (req: Request, res: Response): Promise<Response>
         const { token } = req.body;
         const { userID } = req.params;
 
-        const user = await userModel.findById(userID)
+        const user = await userModel.findById(userID);
 
         if (!token) {
             return res.status(Http.Bad).json({
@@ -67,25 +77,27 @@ export const verifyUser = async (req: Request, res: Response): Promise<Response>
             });
         }
 
-        const verificationUser = await userModel.findByIdAndUpdate(userID,
+        const verificationUser = await userModel.findByIdAndUpdate(
+            userID,
             { verify: true, token: user?.token },
             { new: true }
-        )
+        );
 
         return res.status(Http.Ok).json({
-            message: "verifying user successfully",
+            message: "User verified successfully",
             data: verificationUser,
-            status: Http.Ok
-        })
+            status: Http.Ok,
+        });
     } catch (error: any) {
-        console.log(error)
+        console.log(error);
         return res.status(Http.Bad).json({
             message: "Error verifying user",
             error: error.message,
-            status: Http.Bad
-        })
+            status: Http.Bad,
+        });
     }
-}
+};
+
 
 export const loginUser = async (req: Request, res: Response): Promise<Response> => {
     try {
