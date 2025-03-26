@@ -11,8 +11,6 @@ interface iUser {
     state: string;
     lga: string;
     verify: boolean;
-    rate: number;
-    feedback: string;
     company: {};
 }
 
@@ -48,12 +46,6 @@ const userModel = new Schema<iUserData>(
         },
         lga: {
             type: String
-        },
-        feedback: {
-            type: String
-        },
-        rate: {
-            type: Number
         },
         verify: {
             type: Boolean,
