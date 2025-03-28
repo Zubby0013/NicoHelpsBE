@@ -127,3 +127,91 @@ export const monitorActivities = async (req: Request, res: Response): Promise<Re
         });
     }
 };
+
+export const suspendStaffTrue = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const { companyID, staffID } = req.params;
+
+        const company = await adminModel.findById(companyID);
+
+        if (company && company?.verify) {
+            const staff = await staffModel.findById(staffID);
+            if (staff) {
+                const result = await staffModel.findByIdAndUpdate(
+                    staff._id,
+                    { isSuspended: true },
+                    { new: true }
+                );
+
+                return res.status(Http.Created).json({
+                    message: `${staff.firstName} ${staff.lastName} Suspension Is Successfully`,
+                    data: result,
+                    status: Http.Created,
+                });
+            } else {
+                return res.status(Http.Bad).json({
+                    message: "Staff Does Not Exist",
+                    status: Http.Bad,
+                });
+            }
+        } else {
+            return res.status(Http.Bad).json({
+                message: "Company Does Not Exist Or Is Not Verified",
+                status: Http.Bad,
+            });
+        }
+    } catch (error: any) {
+        return res.status(Http.Bad).json({
+            message: "Sorry, An Error Occurred, Retry",
+            status: Http.Bad,
+            error: error.messsage,
+        });
+    }
+};
+
+export const suspendStaffFalse = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const { companyID, staffID } = req.params;
+
+        const company = await adminModel.findById(companyID);
+
+        if (company && company?.verify) {
+            const staff = await staffModel.findById(staffID);
+            if (staff) {
+                const result = await staffModel.findByIdAndUpdate(
+                    staff._id,
+                    { isSuspended: false },
+                    { new: true }
+                );
+
+                return res.status(Http.Created).json({
+                    message: `${staff.firstName} ${staff.lastName} Suspension Is Lifted Successfully`,
+                    data: result,
+                    status: Http.Created,
+                });
+            } else {
+                return res.status(Http.Bad).json({
+                    message: "Staff Does Not Exist",
+                    status: Http.Bad,
+                });
+            }
+        } else {
+            return res.status(Http.Bad).json({
+                message: "Company Does Not Exist Or Is Not Verified",
+                status: Http.Bad,
+            });
+        }
+    } catch (error: any) {
+        return res.status(Http.Bad).json({
+            message: "Sorry, An Error Occurred, Retry",
+            status: Http.Bad,
+            error: error.messsage,
+        });
+    }
+};

@@ -6,7 +6,7 @@ import multer from "multer";
 const router: Router = Router();
 
 router.route("/register-staff").post(registerStaff);
-router.route("/create-post").post((req, res, next) => {
+router.route("/create-post/:staffID").post((req, res, next) => {
     uploadImage(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             if (err.code === "LIMIT_FILE_SIZE") {

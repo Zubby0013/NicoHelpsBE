@@ -9,6 +9,7 @@ interface iUser {
     phoneNumber: string;
     token: string;
     state: string;
+    gender: string;
     lga: string;
     verify: boolean;
     company: {};
@@ -38,6 +39,9 @@ const userModel = new Schema<iUserData>(
             type: String
         },
         state: {
+            type: String
+        },
+        gender: {
             type: String
         },
         token: {

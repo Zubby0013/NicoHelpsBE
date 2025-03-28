@@ -158,7 +158,7 @@ export const staffFirstLogin = async (
     res: Response
 ): Promise<Response> => {
     try {
-        const { firstName, lastName, address, state, lga, nin, bvn } = req.body;
+        const { firstName, lastName, address, state, lga, nin, bvn, typesOfSkill } = req.body;
         const { staffID } = req.params;
 
         const staff = await staffModel.findById(staffID);
@@ -174,6 +174,7 @@ export const staffFirstLogin = async (
                         firstName: firstName,
                         lastName: lastName,
                         staffAddress: address,
+                        typesOfSkill: typesOfSkill,
                         state: state,
                         lga: lga,
                         bvn: hashedBvn,
@@ -202,6 +203,25 @@ export const staffFirstLogin = async (
     } catch (error: any) {
         return res.status(Http.Bad).json({
             message: "Error Updating staffs First Login",
+            status: Http.Bad,
+            error: error.messsage,
+        });
+    }
+};
+
+export const logoutStaff = async (
+    req: any,
+    res: Response
+): Promise<Response> => {
+    try {
+        req.session.destroy();
+
+        return res.status(Http.Ok).json({
+            message: "Logged Out Account Successfully, GoodBye",
+        });
+    } catch (error: any) {
+        return res.status(404).json({
+            message: "Error Logging out Account",
             status: Http.Bad,
             error: error.messsage,
         });
@@ -293,6 +313,8 @@ export const createPost = async (req: Request, res: Response): Promise<Response>
 
         const details = await staffModel.findById(staffID);
 
+        console.log("Request Body:", req.body);
+        console.log("Request File:", req.file);
         if (staffID) {
             const staff = await staffPostModel.create({
                 image: secure_url,
@@ -358,6 +380,80 @@ export const getStaffPosts = async (req: Request, res: Response): Promise<Respon
             message: "Error retrieving staff posts.",
             error: error.message,
             status: Http.Server_Error,
+        });
+    }
+};
+
+//edithprofile
+
+export const editStaffName = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const { staffID } = req.params;
+        const { firstName, lastName } = req.body;
+        const staff = await staffModel.findById(staffID);
+
+        if (staff) {
+            const result = await staffModel.findByIdAndUpdate(
+                staff._id,
+                { firstName: firstName, lastName: lastName },
+                { new: true }
+            );
+
+            return res.status(Http.Created).json({
+                message: "Name Successfully Edited",
+                data: result,
+                status: Http.Created,
+            });
+        } else {
+            return res.status(Http.Bad).json({
+                message: "Staff Does Not Exist",
+                status: Http.Bad,
+            });
+        }
+    } catch (error: any) {
+        return res.status(Http.Bad).json({
+            message: "Sorry, An Error Occurred",
+            status: Http.Bad,
+            error: error.messsage,
+        });
+    }
+};
+
+export const editStaffAdress = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const { staffID } = req.params;
+        const { address } = req.body;
+        const staff = await staffModel.findById(staffID);
+
+        if (staff) {
+            const result = await staffModel.findByIdAndUpdate(
+                staff._id,
+                { address: address },
+                { new: true }
+            );
+
+            return res.status(Http.Created).json({
+                message: "Address Successfully Edited",
+                data: result,
+                status: Http.Created,
+            });
+        } else {
+            return res.status(Http.Bad).json({
+                message: "Staff Does Not Exist",
+                status: Http.Bad,
+            });
+        }
+    } catch (error: any) {
+        return res.status(Http.Bad).json({
+            message: "Sorry, An Error Occurred",
+            status: Http.Bad,
+            error: error.messsage,
         });
     }
 };

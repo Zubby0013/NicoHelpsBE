@@ -12,7 +12,6 @@ import adminModel from "../Model/adminModel";
 export const registerUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, phoneNumber, password, address, firstName, lastName, state, lga } = req.body;
-        const { adminID } = req.params
 
 
         const salt = await bcrypt.genSalt(10);
@@ -181,6 +180,26 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
         })
     }
 }
+
+export const logoutUser = async (
+    req: any,
+    res: Response
+): Promise<Response> => {
+    try {
+        req.session.destroy();
+
+        return res.status(Http.Ok).json({
+            message: "Logged Out Account Successfully, GoodBye",
+        });
+    } catch (error: any) {
+        return res.status(404).json({
+            message: "Error Logging out Account",
+            status: Http.Bad,
+            error: error.messsage,
+        });
+    }
+};
+
 
 //getuser
 export const getOneUser = async (req: Request, res: Response): Promise<Response> => {
