@@ -13,12 +13,14 @@ interface iStaff {
     address: string;
     password: string;
     phoneNumber: string;
+    typesOfSkill: string;
     token: string;
     state: string;
     lga: string;
     verify: boolean;
     started: boolean;
     nin: string;
+    gender: string;
     bvn: string;
     company: {};
 
@@ -35,12 +37,14 @@ const staffModel = new Schema<iStaffData>(
         firstName: { type: String },
         lastName: { type: String },
         password: { type: String },
+        typesOfSkill: { type: String },
         email: { type: String, unique: true },
         nin: { type: String, unique: true },
         bvn: { type: String, unique: true },
         address: { type: String },
         phoneNumber: { type: String },
         state: { type: String },
+        gender: { type: String },
         token: { type: String, unique: true },
         lga: { type: String },
         verify: { type: Boolean, default: false },

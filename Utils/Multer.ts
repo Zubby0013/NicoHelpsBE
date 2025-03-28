@@ -17,6 +17,7 @@ export const uploadImage = multer({
 
     fileFilter: async function (req: any, file: any, callback: any) {
         var ext: any = file.mimetype;
+        console.log("Incoming file:", file);
 
         if (
             ext !== "image/jpeg" &&
@@ -29,5 +30,5 @@ export const uploadImage = multer({
         callback(null, true);
     },
 
-    limits: { fileSize: 1048576 },
+    limits: { fileSize: 5 * 1024 * 1024 },
 }).single("file");
